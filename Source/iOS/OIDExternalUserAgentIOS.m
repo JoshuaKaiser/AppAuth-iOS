@@ -90,60 +90,7 @@ static id<OIDSafariViewControllerFactory> __nullable gSafariViewControllerFactor
   BOOL openedSafari = NO;
   NSURL *requestURL = [request externalUserAgentRequestURL];
 
-  // iOS 12 and later, use ASWebAuthenticationSession
-  if (@available(iOS 12.0, *)) {
-    __weak OIDExternalUserAgentIOS *weakSelf = self;
-    NSString *redirectScheme = request.redirectScheme;
-    ASWebAuthenticationSession *authenticationVC =
-        [[ASWebAuthenticationSession alloc] initWithURL:requestURL
-                                      callbackURLScheme:redirectScheme
-                                       completionHandler:^(NSURL * _Nullable callbackURL,
-                                                           NSError * _Nullable error) {
-      __strong OIDExternalUserAgentIOS *strongSelf = weakSelf;
-      if (!strongSelf) {
-          return;
-      }
-      strongSelf->_webAuthenticationVC = nil;
-      if (callbackURL) {
-        [strongSelf->_session resumeExternalUserAgentFlowWithURL:callbackURL];
-      } else {
-        NSError *safariError =
-            [OIDErrorUtilities errorWithCode:OIDErrorCodeUserCanceledAuthorizationFlow
-                             underlyingError:error
-                                 description:nil];
-        [strongSelf->_session failExternalUserAgentFlowWithError:safariError];
-      }
-    }];
-    _webAuthenticationVC = authenticationVC;
-    openedSafari = [authenticationVC start];
-  // iOS 11, use SFAuthenticationSession
-  } else if (@available(iOS 11.0, *)) {
-    __weak OIDExternalUserAgentIOS *weakSelf = self;
-    NSString *redirectScheme = request.redirectScheme;
-    SFAuthenticationSession *authenticationVC =
-        [[SFAuthenticationSession alloc] initWithURL:requestURL
-                                   callbackURLScheme:redirectScheme
-                                   completionHandler:^(NSURL * _Nullable callbackURL,
-                                                       NSError * _Nullable error) {
-      __strong OIDExternalUserAgentIOS *strongSelf = weakSelf;
-      if (!strongSelf) {
-          return;
-      }
-      strongSelf->_authenticationVC = nil;
-      if (callbackURL) {
-        [strongSelf->_session resumeExternalUserAgentFlowWithURL:callbackURL];
-      } else {
-        NSError *safariError =
-            [OIDErrorUtilities errorWithCode:OIDErrorCodeUserCanceledAuthorizationFlow
-                             underlyingError:error
-                                 description:@"User cancelled."];
-        [strongSelf->_session failExternalUserAgentFlowWithError:safariError];
-      }
-    }];
-    _authenticationVC = authenticationVC;
-    openedSafari = [authenticationVC start];
-  // iOS 9 and 10, use SFSafariViewController
-  } else if (@available(iOS 9.0, *)) {
+  if (@available(iOS 9.0, *)) {
     SFSafariViewController *safariVC =
         [[[self class] safariViewControllerFactory] safariViewControllerWithURL:requestURL];
     safariVC.delegate = self;
@@ -179,10 +126,7 @@ static id<OIDSafariViewControllerFactory> __nullable gSafariViewControllerFactor
   
   [self cleanUp];
   
-  if (@available(iOS 11.0, *)) {
-    [authenticationVC cancel];
-    if (completion) completion();
-  } else if (@available(iOS 9.0, *)) {
+  if (@available(iOS 9.0, *)) {
     if (safariVC) {
       [safariVC dismissViewControllerAnimated:YES completion:completion];
     } else {
