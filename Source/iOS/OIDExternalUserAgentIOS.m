@@ -121,7 +121,6 @@ static id<OIDSafariViewControllerFactory> __nullable gSafariViewControllerFactor
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
   SFSafariViewController *safariVC = _safariVC;
-  SFAuthenticationSession *authenticationVC = _authenticationVC;
 #pragma clang diagnostic pop
   
   [self cleanUp];
